@@ -1,6 +1,7 @@
-opencv-python
-numpy
-mediapipe
-pyautogui
-pillow
-pywin32
+# Python Version (Recommended)
+# Python 3.10 (IMPORTANT for MediaPipe compatibility)
+
+opencv-python==4.8.1.78
+mediapipe==0.10.9
+numpy==1.24.4
+pyautogui==0.9.54
