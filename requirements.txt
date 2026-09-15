@@ -1,4 +1,7 @@
-opencv-python>=4.8.1.78
-mediapipe>=0.10.14
-numpy>=1.24.4
-pyautogui>=0.9.54
+# Flexible version requirements for Virtual Mouse
+# These constraints work with a wide range of Python versions and module versions
+
+opencv-python>=4.5.0
+mediapipe>=0.8.0
+numpy>=1.19.0
+pyautogui>=0.9.50
