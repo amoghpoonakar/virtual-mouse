@@ -26,7 +26,7 @@ except ImportError:
 
 
 # ============================================================
-# PYAutoGUI SETTINGS
+# PYAUTOGUI SETTINGS
 # ============================================================
 
 pyautogui.FAILSAFE = False
@@ -92,7 +92,12 @@ def download_model():
 def create_hand_landmarker():
 
     if not download_model():
-        print("\nERROR: Could not obtain MediaPipe Hand Landmarker model.")
+
+        print(
+            "\nERROR: Could not obtain "
+            "MediaPipe Hand Landmarker model."
+        )
+
         return None
 
     try:
@@ -112,6 +117,7 @@ def create_hand_landmarker():
         )
 
         options = HandLandmarkerOptions(
+
             base_options=BaseOptions(
                 model_asset_path=MODEL_PATH
             ),
@@ -127,18 +133,23 @@ def create_hand_landmarker():
             min_tracking_confidence=0.5
         )
 
-        landmarker = HandLandmarker.create_from_options(
-            options
+        landmarker = (
+            HandLandmarker.create_from_options(
+                options
+            )
         )
 
-        print("✅ MediaPipe Hand Landmarker initialized.")
+        print(
+            "✅ MediaPipe Hand Landmarker initialized."
+        )
 
         return landmarker
 
     except Exception as e:
 
         print(
-            f"❌ Failed to initialize MediaPipe Hand Landmarker: {e}"
+            "❌ Failed to initialize "
+            f"MediaPipe Hand Landmarker: {e}"
         )
 
         print("\nMediaPipe version:")
@@ -203,6 +214,7 @@ class HandDetector:
     ):
 
         self.landmarker = landmarker
+
         self.maxHands = maxHands
 
         self.results = None
@@ -220,21 +232,25 @@ class HandDetector:
         self.timestamp_ms = 0
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # DETECT HANDS
-    # --------------------------------------------------------
+    # ========================================================
 
-    def findHands(self, img, draw=True):
+    def findHands(
+        self,
+        img,
+        draw=True
+    ):
 
         try:
 
-            # OpenCV BGR -> RGB
+            # OpenCV BGR → RGB
             imgRGB = cv2.cvtColor(
                 img,
                 cv2.COLOR_BGR2RGB
             )
 
-            # MediaPipe Image
+            # Create MediaPipe image
             mp_image = mp.Image(
                 image_format=mp.ImageFormat.SRGB,
                 data=imgRGB
@@ -250,19 +266,22 @@ class HandDetector:
                 )
             )
 
-            # Draw landmarks
+            # Draw hand landmarks
             if (
                 draw
                 and self.results
                 and self.results.hand_landmarks
             ):
 
-                for hand_landmarks in self.results.hand_landmarks:
+                for hand_landmarks in (
+                    self.results.hand_landmarks
+                ):
 
                     h, w, _ = img.shape
 
                     points = []
 
+                    # Convert normalized coordinates
                     for landmark in hand_landmarks:
 
                         x = int(
@@ -323,9 +342,9 @@ class HandDetector:
         return img
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # GET LANDMARK POSITIONS
-    # --------------------------------------------------------
+    # ========================================================
 
     def findPosition(
         self,
@@ -342,11 +361,13 @@ class HandDetector:
                 self.results is None
                 or not self.results.hand_landmarks
             ):
+
                 return self.lmList
 
             if handNo >= len(
                 self.results.hand_landmarks
             ):
+
                 return self.lmList
 
             myHand = (
@@ -399,9 +420,9 @@ class HandDetector:
         return self.lmList
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # DETERMINE WHICH FINGERS ARE UP
-    # --------------------------------------------------------
+    # ========================================================
 
     def fingersUp(self):
 
@@ -410,16 +431,25 @@ class HandDetector:
         try:
 
             if len(self.lmList) < 21:
-                return [0, 0, 0, 0, 0]
 
-            # -------------------------
+                return [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+
+            # ------------------------------------------------
             # THUMB
-            # -------------------------
+            # ------------------------------------------------
 
             if (
                 self.lmList[self.tipIds[0]][1]
                 >
-                self.lmList[self.tipIds[0] - 1][1]
+                self.lmList[
+                    self.tipIds[0] - 1
+                ][1]
             ):
 
                 fingers.append(1)
@@ -429,9 +459,9 @@ class HandDetector:
                 fingers.append(0)
 
 
-            # -------------------------
-            # OTHER FINGERS
-            # -------------------------
+            # ------------------------------------------------
+            # OTHER FOUR FINGERS
+            # ------------------------------------------------
 
             for id in range(1, 5):
 
@@ -454,14 +484,20 @@ class HandDetector:
             AttributeError
         ):
 
-            return [0, 0, 0, 0, 0]
+            return [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
 
         return fingers
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # DISTANCE BETWEEN TWO LANDMARKS
-    # --------------------------------------------------------
+    # ========================================================
 
     def findDistance(
         self,
@@ -482,7 +518,14 @@ class HandDetector:
                 return (
                     0,
                     img,
-                    [0, 0, 0, 0, 0, 0]
+                    [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
                 )
 
             x1, y1 = self.lmList[p1][1:]
@@ -542,7 +585,14 @@ class HandDetector:
             return (
                 0,
                 img,
-                [0, 0, 0, 0, 0, 0]
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
             )
 
 
@@ -554,7 +604,7 @@ def main():
 
     print()
     print("=" * 60)
-    print("        VIRTUAL MOUSE")
+    print("                 VIRTUAL MOUSE")
     print("=" * 60)
 
     print(
@@ -570,9 +620,9 @@ def main():
     print("=" * 60)
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # CAMERA SETTINGS
-    # --------------------------------------------------------
+    # ========================================================
 
     wCam = 640
     hCam = 480
@@ -582,9 +632,9 @@ def main():
     smoothening = 7
 
 
-    # --------------------------------------------------------
-    # SCREEN
-    # --------------------------------------------------------
+    # ========================================================
+    # SCREEN SIZE
+    # ========================================================
 
     try:
 
@@ -605,9 +655,9 @@ def main():
         hScr = 1080
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # INITIALIZE MEDIAPIPE
-    # --------------------------------------------------------
+    # ========================================================
 
     landmarker = create_hand_landmarker()
 
@@ -626,9 +676,9 @@ def main():
     )
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # INITIALIZE CAMERA
-    # --------------------------------------------------------
+    # ========================================================
 
     cap = cv2.VideoCapture(0)
 
@@ -665,9 +715,9 @@ def main():
     )
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # MOUSE VARIABLES
-    # --------------------------------------------------------
+    # ========================================================
 
     plocX = 0
     plocY = 0
@@ -682,15 +732,21 @@ def main():
     click_cooldown = 0.25
 
 
+    # ========================================================
+    # START MESSAGE
+    # ========================================================
+
     print()
     print("=" * 60)
-    print("✅ VIRTUAL MOUSE STARTED")
+    print("           ✅ VIRTUAL MOUSE STARTED")
     print("=" * 60)
 
     print("Controls:")
-    print("  ☝️  Index finger   → Move mouse")
-    print("  🤌 Index + Middle  → Click")
-    print("  Q / ESC            → Quit")
+    print("  ☝️  Index finger        → Move mouse")
+    print("  🤌 Index + Middle      → Click")
+    print("  Q                      → Quit")
+    print("  ESC                    → Quit")
+    print("  X button               → Quit")
 
     print("=" * 60)
     print()
@@ -703,6 +759,10 @@ def main():
     try:
 
         while True:
+
+            # ------------------------------------------------
+            # READ CAMERA
+            # ------------------------------------------------
 
             success, img = cap.read()
 
@@ -751,12 +811,12 @@ def main():
                     # Middle fingertip
                     x2, y2 = lmList[12][1:]
 
-
                     fingers = detector.fingersUp()
 
 
                     # =================================================
-                    # MODE 1: INDEX FINGER ONLY
+                    # MODE 1
+                    # INDEX FINGER ONLY = MOVE
                     # =================================================
 
                     if (
@@ -764,7 +824,8 @@ def main():
                         and fingers[2] == 0
                     ):
 
-                        # Active area
+                        # Active camera area
+
                         cv2.rectangle(
                             img,
                             (
@@ -808,20 +869,26 @@ def main():
                         )
 
 
-                        # Smooth mouse movement
+                        # Smooth movement
 
                         clocX = (
                             plocX
                             +
-                            (x3 - plocX)
-                            / smoothening
+                            (
+                                x3 - plocX
+                            )
+                            /
+                            smoothening
                         )
 
                         clocY = (
                             plocY
                             +
-                            (y3 - plocY)
-                            / smoothening
+                            (
+                                y3 - plocY
+                            )
+                            /
+                            smoothening
                         )
 
 
@@ -834,7 +901,7 @@ def main():
                         )
 
 
-                        # Visual indicator
+                        # Draw cursor point
 
                         cv2.circle(
                             img,
@@ -850,7 +917,8 @@ def main():
 
 
                     # =================================================
-                    # MODE 2: INDEX + MIDDLE
+                    # MODE 2
+                    # INDEX + MIDDLE = CLICK
                     # =================================================
 
                     elif (
@@ -868,7 +936,7 @@ def main():
 
 
                         # Fingers close together
-                        # = CLICK
+                        # = click
 
                         if length < 40:
 
@@ -884,10 +952,12 @@ def main():
                             )
 
 
-                            current_time = time.time()
+                            current_time = (
+                                time.time()
+                            )
 
 
-                            # Prevent rapid repeated clicks
+                            # Click cooldown
 
                             if (
                                 current_time
@@ -912,9 +982,9 @@ def main():
                     pass
 
 
-            # ------------------------------------------------
+            # =================================================
             # FPS
-            # ------------------------------------------------
+            # =================================================
 
             cTime = time.time()
 
@@ -927,9 +997,9 @@ def main():
             pTime = cTime
 
 
-            # ------------------------------------------------
+            # =================================================
             # UI
-            # ------------------------------------------------
+            # =================================================
 
             cv2.putText(
                 img,
@@ -953,7 +1023,7 @@ def main():
 
             cv2.putText(
                 img,
-                "Q / ESC = Quit",
+                "Q / ESC / X = Quit",
                 (20, 120),
                 cv2.FONT_HERSHEY_PLAIN,
                 1.5,
@@ -962,9 +1032,9 @@ def main():
             )
 
 
-            # ------------------------------------------------
+            # =================================================
             # SHOW WINDOW
-            # ------------------------------------------------
+            # =================================================
 
             cv2.imshow(
                 "Virtual Mouse",
@@ -972,15 +1042,16 @@ def main():
             )
 
 
-            # ------------------------------------------------
-            # EXIT
-            # ------------------------------------------------
+            # =================================================
+            # KEYBOARD EXIT
+            # =================================================
 
             key = (
                 cv2.waitKey(1)
                 & 0xFF
             )
 
+            # Q or ESC
             if (
                 key == ord("q")
                 or key == 27
@@ -990,6 +1061,33 @@ def main():
                     "\n👋 Shutting down..."
                 )
 
+                break
+
+
+            # =================================================
+            # X BUTTON EXIT
+            # =================================================
+
+            try:
+
+                window_visible = (
+                    cv2.getWindowProperty(
+                        "Virtual Mouse",
+                        cv2.WND_PROP_VISIBLE
+                    )
+                )
+
+                if window_visible < 1:
+
+                    print(
+                        "\n❌ Virtual Mouse window closed."
+                    )
+
+                    break
+
+            except cv2.error:
+
+                # Window no longer exists
                 break
 
 
@@ -1009,13 +1107,23 @@ def main():
 
     finally:
 
-        # Camera cleanup
+        # =====================================================
+        # CLEANUP
+        # =====================================================
 
-        cap.release()
+        print(
+            "\n🧹 Cleaning up..."
+        )
 
-        cv2.destroyAllWindows()
+        try:
+            cap.release()
+        except Exception:
+            pass
 
-        # MediaPipe cleanup
+        try:
+            cv2.destroyAllWindows()
+        except Exception:
+            pass
 
         try:
             landmarker.close()
@@ -1032,4 +1140,5 @@ def main():
 # ============================================================
 
 if __name__ == "__main__":
+
     main()
