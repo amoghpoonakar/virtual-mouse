@@ -13,6 +13,9 @@ pTime = 0
 plocX, plocY = 0, 0
 clocX, clocY = 0, 0
 
+# Prevent script from crashing when mouse hits the absolute corners of the screen
+pyautogui.FAILSAFE = False
+
 # Screen size detection
 wScr, hScr = pyautogui.size()
 
@@ -24,10 +27,11 @@ class HandDetector():
         self.trackCon = trackCon
 
         self.mpHands = mp.solutions.hands
-        # Yahan parameters explicitly define kiye hain error se bachne ke liye
+        # FIXED: Added model_complexity and ensured strict compatibility with modern MediaPipe versions
         self.hands = self.mpHands.Hands(
             static_image_mode=self.mode,
             max_num_hands=self.maxHands,
+            model_complexity=1,
             min_detection_confidence=self.detectionCon,
             min_tracking_confidence=self.trackCon
         )
@@ -57,7 +61,7 @@ class HandDetector():
 
     def fingersUp(self):
         fingers = []
-        # Thumb
+        # Thumb (Checks relative horizontal placement for left/right hands)
         if self.lmList[self.tipIds[0]][1] > self.lmList[self.tipIds[0] - 1][1]:
             fingers.append(1)
         else:
@@ -88,6 +92,9 @@ detector = HandDetector(maxHands=1)
 
 while True:
     success, img = cap.read()
+    if not success:
+        break
+        
     img = cv2.flip(img, 1) # Mirror flip
     img = detector.findHands(img)
     lmList = detector.findPosition(img)
@@ -111,7 +118,8 @@ while True:
             clocX = plocX + (x3 - plocX) / smoothening
             clocY = plocY + (y3 - plocY) / smoothening
 
-            pyautogui.moveTo(clocX, clocY)
+            # FIXED: Cast to integer to avoid matrix/float errors in newer libraries
+            pyautogui.moveTo(int(clocX), int(clocY))
             cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
             plocX, plocY = clocX, clocY
 
