@@ -1,546 +1,355 @@
-# Virtual Mouse using Hand Tracking
+# Virtual Mouse
 
----
+A real-time computer vision-based virtual mouse that allows users to control the cursor and perform mouse clicks using hand gestures captured through a webcam.
 
-## Project Overview
+The project uses OpenCV for video capture and image processing, MediaPipe's Hand Landmarker for real-time hand tracking, and PyAutoGUI for controlling the system mouse.
 
-This project implements a virtual mouse system using hand gesture recognition. It uses computer vision and machine learning to track hand movements through a webcam and control the mouse cursor without physical input devices.
+## Features
 
-The system detects hand landmarks and interprets specific finger gestures to perform actions such as cursor movement and mouse clicking.
+* Real-time hand tracking using a webcam
+* Index finger-based cursor movement
+* Index and middle finger gesture for mouse clicking
+* Smooth cursor movement with configurable smoothing
+* Adjustable active tracking area
+* Automatic hand landmark visualization
+* Real-time FPS display
+* Automatic download of the MediaPipe Hand Landmarker model
+* Compatible with modern MediaPipe Tasks API
+* Supports Python 3.13
+* Multiple exit methods:
 
----
+  * `Q`
+  * `ESC`
+  * Window close button (`X`)
 
-## 🎯 Features
+## How It Works
 
-- ✅ Real-time hand tracking using MediaPipe  
-- ✅ Cursor movement using index finger  
-- ✅ Mouse click using index and middle finger gesture  
-- ✅ Smooth cursor motion with interpolation  
-- ✅ Frame reduction for better control accuracy  
-- ✅ FPS display for performance monitoring  
-- ✅ Version-agnostic (works with any modern Python/module versions)
-- ✅ Comprehensive error handling and fallbacks
+The application captures frames from the webcam and processes them using MediaPipe's Hand Landmarker.
 
----
+The detected hand landmarks are used to determine finger positions and gestures.
 
-## 💻 Technology Stack
+### Cursor Movement
 
-- **Python** (3.6+)
-- **OpenCV** (4.5.0+)
-- **MediaPipe** (0.8.0+)
-- **NumPy** (1.19.0+)
-- **PyAutoGUI** (0.9.50+)
+When only the index finger is raised, the tip of the index finger is tracked.
 
----
+Its coordinates within the camera's active region are mapped to the corresponding coordinates on the computer screen.
 
-## 📋 Prerequisites
+A smoothing algorithm is applied to reduce unwanted cursor movement.
 
-Before you start, make sure you have:
+```text
+Webcam
+   |
+   v
+OpenCV Frame Capture
+   |
+   v
+MediaPipe Hand Landmarker
+   |
+   v
+Hand Landmark Detection
+   |
+   v
+Gesture Recognition
+   |
+   v
+Coordinate Mapping
+   |
+   v
+PyAutoGUI
+   |
+   v
+System Cursor
+```
 
-- **Python 3.6 or higher** installed
-- **Webcam/Camera** connected to your system
-- **Internet connection** (for initial package downloads)
-- **Administrator/sudo access** (may be needed for camera permissions on some systems)
+### Mouse Click
 
----
+When the index and middle fingers are raised, the distance between their fingertips is calculated.
 
-## 🚀 Installation Guide
+When the fingertips move sufficiently close together, the application interprets the gesture as a mouse click.
 
-### Step 1: Clone or Download the Project
+```text
+Index + Middle Finger
+          |
+          v
+Distance between fingertips
+          |
+          v
+Distance < Threshold
+          |
+          v
+     Mouse Click
+```
+
+## Controls
+
+| Gesture / Input       | Action      |
+| --------------------- | ----------- |
+| Index finger only     | Move cursor |
+| Index + middle finger | Click       |
+| `Q`                   | Exit        |
+| `ESC`                 | Exit        |
+| Window `X` button     | Exit        |
+
+## Technologies Used
+
+| Technology | Purpose                                           |
+| ---------- | ------------------------------------------------- |
+| Python     | Core programming language                         |
+| OpenCV     | Webcam capture and image processing               |
+| MediaPipe  | Real-time hand landmark detection                 |
+| NumPy      | Coordinate interpolation and numerical operations |
+| PyAutoGUI  | System mouse control                              |
+
+## Requirements
+
+* Python 3.13 or compatible Python version
+* Working webcam
+* Windows, macOS, or Linux system capable of running the required dependencies
+
+## Installation
+
+### 1. Clone the repository
 
 ```bash
-# Clone the repository (if using git)
-git clone <repository-url>
+git clone https://github.com/your-username/virtual-mouse.git
 cd virtual-mouse
-
-# Or download and extract the ZIP file manually
 ```
 
-### Step 2: Install Python Dependencies
+Replace `your-username/virtual-mouse` with the actual repository URL.
 
-**Option A: Using requirements.txt (Recommended)**
+### 2. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-**Option B: Manual Installation**
+The project uses the following dependencies:
+
+```text
+opencv-python>=4.8.0
+mediapipe>=0.10.30,<1.0.0
+numpy>=1.24.0
+pyautogui>=0.9.54
+```
+
+### 3. Run the application
 
 ```bash
-pip install opencv-python
-pip install mediapipe
-pip install numpy
-pip install pyautogui
+python VirtualMouse.py
 ```
 
-**Option C: Using pip with explicit versions (if you face conflicts)**
+On the first launch, the application automatically downloads the MediaPipe Hand Landmarker model and stores it in the local `models` directory.
+
+The resulting project structure will look like:
+
+```text
+Virtual-Mouse/
+│
+├── VirtualMouse.py
+├── requirements.txt
+├── README.md
+│
+└── models/
+    └── hand_landmarker.task
+```
+
+## Configuration
+
+Several parameters can be adjusted directly in `VirtualMouse.py`.
+
+### Camera Resolution
+
+```python
+wCam = 640
+hCam = 480
+```
+
+### Active Tracking Area
+
+```python
+frameR = 100
+```
+
+A larger value reduces the active area of the camera frame.
+
+### Cursor Smoothing
+
+```python
+smoothening = 7
+```
+
+Higher values produce smoother but slower cursor movement.
+
+Lower values make the cursor more responsive but can introduce more jitter.
+
+### Click Threshold
+
+```python
+if length < 40:
+```
+
+This controls how close the index and middle fingertips must be before a click is triggered.
+
+### Click Cooldown
+
+```python
+click_cooldown = 0.25
+```
+
+This prevents multiple clicks from being generated continuously while the fingers remain close together.
+
+## Project Structure
+
+```text
+Virtual-Mouse/
+│
+├── VirtualMouse.py
+│   ├── MediaPipe initialization
+│   ├── HandDetector
+│   ├── Landmark processing
+│   ├── Finger detection
+│   ├── Gesture recognition
+│   ├── Cursor mapping
+│   ├── Mouse control
+│   └── Application loop
+│
+├── requirements.txt
+│   └── Python dependencies
+│
+├── models/
+│   └── hand_landmarker.task
+│
+└── README.md
+```
+
+## MediaPipe Architecture
+
+This project uses MediaPipe's modern Tasks API rather than the deprecated `mp.solutions.hands` interface.
+
+The application initializes:
+
+```python
+mp.tasks.vision.HandLandmarker
+```
+
+and processes webcam frames using video mode:
+
+```python
+landmarker.detect_for_video(...)
+```
+
+This allows the project to work with newer MediaPipe releases that no longer expose the legacy `mp.solutions` interface.
+
+## Performance
+
+The application displays the current frames-per-second value directly in the camera window.
+
+Performance depends on:
+
+* CPU performance
+* Camera resolution
+* Webcam frame rate
+* MediaPipe processing time
+* Background applications
+* Cursor smoothing configuration
+
+For better performance, the default camera resolution is set to `640 × 480`.
+
+## Troubleshooting
+
+### MediaPipe installation error
+
+Make sure the dependencies are installed using the Python interpreter that runs the project:
 
 ```bash
-pip install opencv-python>=4.5.0
-pip install mediapipe>=0.8.0
-pip install numpy>=1.19.0
-pip install pyautogui>=0.9.50
+python -m pip install -r requirements.txt
 ```
 
-### Step 3: Verify Installation (Optional but Recommended)
-
-Run the setup validation script to check if everything is installed correctly:
+Check the installed MediaPipe version:
 
 ```bash
-python check_setup.py
+python -c "import mediapipe as mp; print(mp.__version__)"
 ```
 
-Expected output should show:
-- ✅ Python version compatible
-- ✅ All modules installed
-- ✅ Camera accessible
-- ✅ Screen detected
+### Camera does not open
 
-### Step 4: Run the Application
+The application initially attempts to use camera index `0`.
 
-```bash
-python Virtual_mouse.py
-```
-
----
-
-## ⚡ Quick Start
-
-1. **Start the application:**
-   ```bash
-   python Virtual_mouse.py
-   ```
-
-2. **Allow camera access** (if prompted by your OS)
-
-3. **Position your hand** in front of the camera
-
-4. **Use gestures to control:**
-   - ☝️ **Index finger up** → Move mouse cursor
-   - 🤌 **Index + Middle fingers close** → Click
-   - 🔴 **Press Q or ESC** → Quit
-
----
-
-## 🎮 How It Works
-
-1. The webcam captures live video input in real-time  
-2. MediaPipe detects 21 hand landmarks using machine learning  
-3. The index finger tip position controls cursor movement  
-4. The distance between index and middle fingers determines click action  
-5. Cursor movement is smoothed using interpolation for better usability  
-6. The system maps hand coordinates to screen resolution automatically
-
-### Gesture Recognition Logic
-
-```
-Index Finger Only ──→ Move Mode (Mouse tracking)
-        ↓
-   Index + Middle Close ──→ Click Mode
-        ↓
-   Perform Click Action ──→ Mouse Click Event
-```
-
----
-
-## ⚙️ Configuration
-
-You can modify the following parameters in the code by editing `Virtual_mouse.py`:
-
-### Camera Settings (Lines ~31-35)
+If the camera cannot be opened, try changing:
 
 ```python
-wCam, hCam = 640, 480        # Camera resolution (width, height)
-frameR = 100                 # Active movement area (pixels from edge)
-smoothening = 7              # Smoothness factor (higher = smoother but slower)
+cap = cv2.VideoCapture(0)
 ```
 
-### Hand Detection Settings (Line ~268)
+to:
 
 ```python
-detector = HandDetector(
-    maxHands=1,              # Number of hands to detect
-    detectionCon=0.5,        # Detection confidence (0-1, higher = stricter)
-    trackCon=0.5             # Tracking confidence (0-1, higher = stricter)
-)
+cap = cv2.VideoCapture(1)
 ```
 
-### Click Distance Threshold (Line ~310)
+You can also check whether another application is currently using the webcam.
+
+### Cursor movement is too sensitive
+
+Increase:
 
 ```python
-if length < 40:              # Distance threshold for click (pixels)
-    pyautogui.click()
+smoothening = 7
 ```
 
----
+For example:
 
-## 🎛️ Tuning Guide
-
-### For Faster Response
 ```python
-smoothening = 5              # Reduce from 7
-detectionCon = 0.3           # More lenient detection
-frameR = 50                  # Smaller active area
+smoothening = 10
 ```
 
-### For Smoother Movement
+### Cursor movement is too slow
+
+Decrease the smoothing value:
+
 ```python
-smoothening = 12             # Increase from 7
-detectionCon = 0.7           # Stricter detection
-frameR = 150                 # Larger active area
+smoothening = 5
 ```
 
-### For Better Accuracy
+### Multiple clicks are triggered
+
+Increase:
+
 ```python
-wCam, hCam = 1280, 720       # Higher resolution
-detectionCon = 0.7           # Higher confidence
-trackCon = 0.7               # Higher tracking
+click_cooldown = 0.25
 ```
 
-### For Low-End Systems
+For example:
+
 ```python
-wCam, hCam = 320, 240        # Lower resolution
-smoothening = 5              # Reduce processing
-detectionCon = 0.3           # Lower requirements
+click_cooldown = 0.4
 ```
 
----
+## Future Improvements
 
-## 🎮 Controls Reference
+Potential improvements for future versions include:
 
-| Gesture | Action | Visual Indicator |
-|---------|--------|------------------|
-| Index finger up | Move cursor | Purple circle at finger tip |
-| Index + Middle close | Prepare click | Pink line between fingers |
-| Fingers < 40px apart | Perform click | Green circle at midpoint |
-| Q or ESC key | Quit application | Program terminates |
+* Right-click gesture
+* Double-click gesture
+* Drag-and-drop gesture
+* Scroll gesture
+* Volume control gestures
+* Customizable gestures
+* Gesture configuration through a settings interface
+* Multi-hand support
+* Improved cursor stabilization
+* Application-specific gesture profiles
+* Performance optimization
 
----
+## License
 
-## 📊 Output Information
+This project is distributed under the license specified in the repository's `LICENSE` file.
 
-The application displays:
+If no license file is present, all rights are reserved by the author.
 
-- **Live webcam feed** with hand landmarks
-- **Active area rectangle** (purple border)
-- **Cursor tracking** (colored circles)
-- **FPS counter** for performance monitoring
-- **Screen resolution** for reference
-- **Click detection** (green indicator)
+## Author
 
----
+**Amogh V P**
 
-## ⚠️ Troubleshooting
-
-### Problem: "ModuleNotFoundError: No module named 'mediapipe'"
-
-**Solution:**
-```bash
-# Reinstall with no cache
-pip install --no-cache-dir mediapipe
-
-# Or upgrade
-pip install --upgrade mediapipe
-```
-
----
-
-### Problem: Camera Won't Open
-
-**Solution:**
-
-1. **Check camera connection:**
-   ```bash
-   python -c "import cv2; cap = cv2.VideoCapture(0); print(cap.isOpened())"
-   ```
-
-2. **Try different camera index:**
-   - Edit line ~268 in code: `cv2.VideoCapture(1)` or `(2)` instead of `(0)`
-
-3. **Linux/Mac - Grant camera permissions:**
-   ```bash
-   # Linux
-   sudo usermod -a -G video $USER
-   # Then log out and back in
-   ```
-
-4. **Windows - Check Privacy Settings:**
-   - Settings → Privacy & Security → Camera → Allow app access
-
----
-
-### Problem: Hand Detection Not Working
-
-**Solution:**
-
-1. **Improve lighting** - Detection works best with good lighting
-2. **Show entire hand** - All 5 fingers must be visible
-3. **Reduce confidence threshold:**
-   ```python
-   detector = HandDetector(detectionCon=0.3, trackCon=0.3)
-   ```
-4. **Adjust distance from camera** - Keep hand 30-60cm away
-
----
-
-### Problem: Erratic/Laggy Cursor Movement
-
-**Solution:**
-
-1. **Increase smoothening factor:**
-   ```python
-   smoothening = 12  # Instead of 7
-   ```
-
-2. **Reduce resolution:**
-   ```python
-   wCam, hCam = 320, 240  # Instead of 640, 480
-   ```
-
-3. **Disable drawing (saves processing):**
-   ```python
-   img = detector.findHands(img, draw=False)
-   ```
-
-4. **Close background applications** to free up resources
-
----
-
-### Problem: Clicks Not Registering
-
-**Solution:**
-
-1. **Increase click threshold:**
-   ```python
-   if length < 50:  # Instead of 40
-       pyautogui.click()
-   ```
-
-2. **Ensure fingers are clearly separated initially**
-
-3. **Add debounce delay:**
-   ```python
-   time.sleep(0.3)  # Wait before next click
-   ```
-
----
-
-### Problem: Low FPS / Performance Issues
-
-**Solution:**
-
-1. **Check system resources:**
-   ```bash
-   # Linux/Mac
-   top
-   
-   # Windows
-   tasklist
-   ```
-
-2. **Reduce camera resolution:**
-   ```python
-   wCam, hCam = 320, 240
-   ```
-
-3. **Disable landmark drawing:**
-   ```python
-   lmList = detector.findPosition(img, draw=False)
-   ```
-
-4. **Use Python 3.9-3.11** (usually faster than 3.12)
-
----
-
-### Problem: "FailSafeException" or Mouse Goes to Corner
-
-**Solution:**
-- This is a safety feature - move your mouse away from screen corners
-- The failsafe is disabled in `Virtual_mouse.py` by default
-
----
-
-## 🔍 Debug Mode
-
-To see detailed information while running:
-
-1. **Run with verbose output:**
-   ```bash
-   python -u Virtual_mouse.py
-   ```
-
-2. **Check versions:**
-   ```bash
-   python check_setup.py
-   ```
-
-3. **Test individual components:**
-   ```python
-   import cv2
-   import mediapipe as mp
-   import pyautogui
-   
-   print("OpenCV:", cv2.__version__)
-   print("Screen size:", pyautogui.size())
-   print("MediaPipe loaded successfully")
-   ```
-
----
-
-## 🎯 Use Cases
-
-- 🖖 **Touchless Interaction** - Control computer without touching keyboard/mouse
-- ♿ **Accessibility** - Assist users with mobility challenges
-- 🎮 **Gaming** - Gesture-based game controls
-- 📺 **Presentations** - Control slides with hand gestures
-- 🏫 **Education** - Learn computer vision and ML concepts
-- 🔬 **Research** - Gesture recognition experiments
-
----
-
-## 📈 Performance Metrics
-
-Typical performance on standard hardware:
-
-| Component | Performance |
-|-----------|------------|
-| FPS | 25-30 FPS on most systems |
-| Latency | 50-100ms mouse response |
-| Accuracy | 95%+ with good lighting |
-| CPU Usage | 15-25% typical |
-| Memory Usage | 100-200MB |
-
----
-
-## ❌ Limitations
-
-- ⚠️ Requires good lighting conditions
-- ⚠️ Accuracy depends on camera quality
-- ⚠️ May have slight latency on low-end systems
-- ⚠️ Gesture detection may vary across users
-- ⚠️ Hand must be fully visible (all 5 fingers)
-- ⚠️ Works best with contrasting hand/background
-
----
-
-## 🚀 Future Improvements
-
-- [ ] Add right-click functionality
-- [ ] Add drag and drop support
-- [ ] Multi-hand gesture support
-- [ ] Gesture customization menu
-- [ ] GUI-based configuration
-- [ ] Performance optimization for low-end devices
-- [ ] Voice commands integration
-- [ ] Volume/brightness control gestures
-- [ ] Custom gesture recording
-- [ ] Database of gesture profiles
-
----
-
-## 📁 Project Structure
-
-```
-virtual-mouse/
-├── Virtual_mouse.py    # Main application (production-ready)
-├── check_setup.py               # Setup validation script
-├── requirements.txt             # Python dependencies
-├── SETUP_GUIDE.md              # Detailed troubleshooting guide
-└── README.md                   # This file
-```
-
----
-
-## 📝 File Descriptions
-
-| File | Purpose |
-|------|---------|
-| `Virtual_mouse.py` | Main application with all hand tracking logic |
-| `check_setup.py` | Validates Python version, modules, and camera access |
-| `requirements.txt` | Lists all Python package dependencies |
-| `SETUP_GUIDE.md` | Comprehensive troubleshooting and configuration guide |
-| `README.md` | Project overview and setup instructions |
-
----
-
-## 🤝 Contributing
-
-Feel free to:
-- Report bugs and issues
-- Suggest improvements
-- Submit pull requests
-- Share your use cases
-
----
-
-## 📜 License
-
-This project is open-source and available for educational and personal use.
-
----
-
-## 🆘 Getting Help
-
-1. **Check SETUP_GUIDE.md** - Most common issues are documented there
-2. **Run check_setup.py** - Validates your installation
-3. **Review troubleshooting section** - Check if your issue is listed
-4. **Check lighting and hand visibility** - Most issues are environment-related
-5. **Review console output** - Error messages provide helpful information
-
----
-
-## 💡 Tips for Best Performance
-
-1. **Lighting** - Use good natural or office lighting
-2. **Contrast** - Wear dark clothes against light background
-3. **Distance** - Keep hand 30-60cm from camera
-4. **Stability** - Use slow, deliberate hand movements
-5. **Full Hand** - Always show all 5 fingers clearly
-6. **Camera Angle** - Position camera at eye level
-7. **Clean Lens** - Keep camera lens clean
-8. **Background** - Use simple, non-cluttered background
-
----
-
-## 📊 Testing Checklist
-
-Before using in production:
-
-- [ ] Installation completed successfully (`check_setup.py` passes)
-- [ ] Camera is accessible and working
-- [ ] Hand tracking works smoothly with good lighting
-- [ ] Cursor movement is responsive
-- [ ] Click detection works reliably
-- [ ] No errors in console output
-- [ ] FPS is 25+ on your system
-- [ ] Gesture recognition is accurate for your hand
-
----
-
-## 🎓 Learning Resources
-
-- [MediaPipe Documentation](https://mediapipe.dev/)
-- [OpenCV Python Tutorials](https://docs.opencv.org/master/d6/d00/tutorial_py_root.html)
-- [Hand Gesture Recognition](https://ai.google/tools/mediapipe/solutions/hands)
-
----
-
-## 🔄 Version History
-
-- **v1.0 (Current)** - Initial release with robust error handling and version compatibility
-
----
-
-## 📧 Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Run `check_setup.py` to validate your environment
-3. Review error messages in console output
-4. Check lighting and hand visibility
-
----
-
-**Happy gesture controlling! 🖱️✨**
-
-For more detailed information, refer to `SETUP_GUIDE.md` in the project directory.
+Developed as a computer vision and human-computer interaction project exploring real-time hand tracking and gesture-based system control.
