@@ -99,7 +99,7 @@ Expected output should show:
 ### Step 4: Run the Application
 
 ```bash
-python virtual_mouse_enhanced.py
+python Virtual_mouse.py
 ```
 
 ---
@@ -108,7 +108,7 @@ python virtual_mouse_enhanced.py
 
 1. **Start the application:**
    ```bash
-   python virtual_mouse_enhanced.py
+   python Virtual_mouse.py
    ```
 
 2. **Allow camera access** (if prompted by your OS)
@@ -145,7 +145,7 @@ Index Finger Only ──→ Move Mode (Mouse tracking)
 
 ## ⚙️ Configuration
 
-You can modify the following parameters in the code by editing `virtual_mouse_enhanced.py`:
+You can modify the following parameters in the code by editing `Virtual_mouse.py`:
 
 ### Camera Settings (Lines ~31-35)
 
@@ -356,7 +356,7 @@ pip install --upgrade mediapipe
 
 **Solution:**
 - This is a safety feature - move your mouse away from screen corners
-- The failsafe is disabled in `virtual_mouse_enhanced.py` by default
+- The failsafe is disabled in `Virtual_mouse.py` by default
 
 ---
 
@@ -366,7 +366,7 @@ To see detailed information while running:
 
 1. **Run with verbose output:**
    ```bash
-   python -u virtual_mouse_enhanced.py
+   python -u Virtual_mouse.py
    ```
 
 2. **Check versions:**
@@ -442,7 +442,7 @@ Typical performance on standard hardware:
 
 ```
 virtual-mouse/
-├── virtual_mouse_enhanced.py    # Main application (production-ready)
+├── Virtual_mouse.py    # Main application (production-ready)
 ├── check_setup.py               # Setup validation script
 ├── requirements.txt             # Python dependencies
 ├── SETUP_GUIDE.md              # Detailed troubleshooting guide
@@ -455,7 +455,7 @@ virtual-mouse/
 
 | File | Purpose |
 |------|---------|
-| `virtual_mouse_enhanced.py` | Main application with all hand tracking logic |
+| `Virtual_mouse.py` | Main application with all hand tracking logic |
 | `check_setup.py` | Validates Python version, modules, and camera access |
 | `requirements.txt` | Lists all Python package dependencies |
 | `SETUP_GUIDE.md` | Comprehensive troubleshooting and configuration guide |
