@@ -9,7 +9,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 try:
-    import mediapipe as mp
+    import mediapipe
 except ImportError:
     print("ERROR: mediapipe not installed. Run: pip install mediapipe")
     sys.exit(1)
@@ -20,8 +20,58 @@ except ImportError:
     print("ERROR: pyautogui not installed. Run: pip install pyautogui")
     sys.exit(1)
 
-# Disable pyautogui failsafe to prevent issues
+# Disable pyautogui failsafe
 pyautogui.FAILSAFE = False
+
+# --- MEDIAPIPE VERSION DETECTION ---
+print(f"🔍 Detecting MediaPipe version...")
+mp_version = mediapipe.__version__
+print(f"📦 MediaPipe version: {mp_version}")
+
+# Try different import methods based on version
+mp = None
+mp_hands = None
+mp_drawing = None
+
+# Method 1: Try modern import (MediaPipe 0.8.11+)
+try:
+    import mediapipe as mp
+    from mediapipe.solutions import hands as mp_hands
+    from mediapipe.solutions import drawing_utils as mp_drawing
+    print("✅ Using MediaPipe (v0.8.11+ API)")
+except (ImportError, AttributeError) as e1:
+    print(f"⚠️  Modern API failed: {e1}")
+    
+    # Method 2: Try older import structure
+    try:
+        import mediapipe as mp
+        mp_hands = mp.solutions.hands
+        mp_drawing = mp.solutions.drawing_utils
+        print("✅ Using MediaPipe (legacy API)")
+    except (ImportError, AttributeError) as e2:
+        print(f"❌ Legacy API failed: {e2}")
+        
+        # Method 3: Try direct module import
+        try:
+            from mediapipe import solutions
+            mp_hands = solutions.hands
+            mp_drawing = solutions.drawing_utils
+            print("✅ Using MediaPipe (direct solutions import)")
+        except (ImportError, AttributeError) as e3:
+            print(f"❌ Direct import failed: {e3}")
+            print("\n" + "="*60)
+            print("SOLUTION: MediaPipe API version is incompatible")
+            print("="*60)
+            print("\nTry one of these:")
+            print("\n1. Downgrade MediaPipe to stable version:")
+            print("   pip uninstall mediapipe")
+            print("   pip install mediapipe==0.10.14")
+            print("\n2. Or upgrade to latest:")
+            print("   pip install --upgrade mediapipe")
+            print("\n3. Or install specific working version:")
+            print("   pip install mediapipe==0.8.11")
+            print("="*60)
+            sys.exit(1)
 
 # --- SETTINGS ---
 wCam, hCam = 640, 480
@@ -36,20 +86,21 @@ try:
     wScr, hScr = pyautogui.size()
     if wScr <= 0 or hScr <= 0:
         raise Exception("Invalid screen size")
+    print(f"✅ Screen detected: {wScr}x{hScr}")
 except Exception as e:
-    print(f"Warning: Could not detect screen size: {e}")
-    print("Using default 1920x1080")
+    print(f"⚠️  Could not detect screen size: {e}")
+    print("   Using default 1920x1080")
     wScr, hScr = 1920, 1080
 
 
 class HandDetector:
     """
-    A versatile hand detector class that works across different MediaPipe versions
+    Hand detector class with comprehensive version compatibility
     """
     
     def __init__(self, mode=False, maxHands=1, detectionCon=0.5, trackCon=0.5):
         """
-        Initialize hand detector with compatibility for different MediaPipe versions
+        Initialize hand detector
         
         Args:
             mode: Static image mode (False for video)
@@ -63,53 +114,47 @@ class HandDetector:
         self.trackCon = trackCon
         self.results = None
         self.lmList = []
-        
-        # Tip IDs for fingers (consistent across versions)
         self.tipIds = [4, 8, 12, 16, 20]
         
         try:
-            self.mpHands = mp.solutions.hands
-            self.mpDraw = mp.solutions.drawing_utils
+            # Check if mp_hands is available
+            if mp_hands is None:
+                raise Exception("MediaPipe hands module not loaded")
             
-            # Try modern parameter names first (MediaPipe 0.8.11+)
+            # Try to initialize with modern parameters first
             try:
-                self.hands = self.mpHands.Hands(
+                self.hands = mp_hands.Hands(
                     static_image_mode=self.mode,
                     max_num_hands=self.maxHands,
                     min_detection_confidence=self.detectionCon,
                     min_tracking_confidence=self.trackCon
                 )
+                print("✅ Hands detector initialized (modern API)")
             except TypeError:
-                # Fallback for older versions with different parameter names
+                # Fallback with model_complexity parameter (some versions)
                 try:
-                    self.hands = self.mpHands.Hands(
+                    self.hands = mp_hands.Hands(
                         static_image_mode=self.mode,
                         max_num_hands=self.maxHands,
                         min_detection_confidence=self.detectionCon,
                         min_tracking_confidence=self.trackCon,
                         model_complexity=0
                     )
+                    print("✅ Hands detector initialized (with model_complexity)")
                 except TypeError:
-                    # Ultimate fallback - use defaults and hope for the best
-                    self.hands = self.mpHands.Hands()
-            
-            print("✓ MediaPipe Hands initialized successfully")
+                    # Ultimate fallback - use default parameters
+                    self.hands = mp_hands.Hands()
+                    print("✅ Hands detector initialized (default parameters)")
             
         except Exception as e:
-            print(f"ERROR: Failed to initialize MediaPipe Hands: {e}")
+            print(f"❌ ERROR: Failed to initialize MediaPipe Hands: {e}")
+            print(f"\nDebugging info:")
+            print(f"  - mp_hands object: {mp_hands}")
+            print(f"  - MediaPipe version: {mp_version}")
             raise
 
     def findHands(self, img, draw=True):
-        """
-        Detect hands in image
-        
-        Args:
-            img: Input image (BGR format)
-            draw: Whether to draw landmarks
-            
-        Returns:
-            Image with landmarks drawn (if draw=True)
-        """
+        """Detect hands in image"""
         try:
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             
@@ -125,33 +170,25 @@ class HandDetector:
             if draw and self.results.multi_hand_landmarks:
                 for handLms in self.results.multi_hand_landmarks:
                     try:
-                        self.mpDraw.draw_landmarks(
+                        if mp_drawing is None:
+                            continue
+                        mp_drawing.draw_landmarks(
                             img, 
                             handLms, 
-                            self.mpHands.HAND_CONNECTIONS
+                            mp_hands.HAND_CONNECTIONS
                         )
                     except Exception as e:
-                        print(f"Warning: Could not draw landmarks: {e}")
+                        print(f"⚠️  Could not draw landmarks: {e}")
                         
         except cv2.error as e:
-            print(f"OpenCV error in findHands: {e}")
+            print(f"❌ OpenCV error in findHands: {e}")
         except Exception as e:
-            print(f"Error in findHands: {e}")
+            print(f"❌ Error in findHands: {e}")
             
         return img
 
     def findPosition(self, img, handNo=0, draw=True):
-        """
-        Get landmark positions for detected hand
-        
-        Args:
-            img: Input image
-            handNo: Hand index (0 for first hand)
-            draw: Whether to draw circles at landmarks
-            
-        Returns:
-            List of landmark positions [[id, x, y], ...]
-        """
+        """Get landmark positions for detected hand"""
         self.lmList = []
         
         try:
@@ -176,22 +213,16 @@ class HandDetector:
                         
                         if draw:
                             cv2.circle(img, (cx, cy), 5, (255, 255, 0), cv2.FILLED)
-                    except (AttributeError, ValueError) as e:
-                        print(f"Warning: Could not process landmark {id}: {e}")
+                    except (AttributeError, ValueError):
+                        pass
                         
         except Exception as e:
-            print(f"Error in findPosition: {e}")
+            print(f"⚠️  Error in findPosition: {e}")
             
         return self.lmList
 
     def fingersUp(self):
-        """
-        Determine which fingers are up
-        
-        Returns:
-            List of 5 binary values [thumb, index, middle, ring, pinky]
-            where 1 = up, 0 = down
-        """
+        """Determine which fingers are up"""
         fingers = []
         
         try:
@@ -215,25 +246,13 @@ class HandDetector:
                     else:
                         fingers.append(0)
                         
-        except (IndexError, AttributeError) as e:
-            print(f"Warning: Error checking fingers: {e}")
+        except (IndexError, AttributeError):
             return [0, 0, 0, 0, 0]
             
         return fingers
 
     def findDistance(self, p1, p2, img, draw=True):
-        """
-        Calculate distance between two landmarks
-        
-        Args:
-            p1: First landmark ID
-            p2: Second landmark ID
-            img: Image to draw on
-            draw: Whether to draw line and circle
-            
-        Returns:
-            (distance, image, info_list)
-        """
+        """Calculate distance between two landmarks"""
         try:
             if not self.lmList or len(self.lmList) <= max(p1, p2):
                 return 0, img, [0, 0, 0, 0, 0, 0]
@@ -254,29 +273,31 @@ class HandDetector:
             return length, img, [x1, y1, x2, y2, cx, cy]
             
         except Exception as e:
-            print(f"Warning: Error calculating distance: {e}")
+            print(f"⚠️  Error calculating distance: {e}")
             return 0, img, [0, 0, 0, 0, 0, 0]
 
 
 def main():
     """Main application loop"""
     
-    # Initialize camera with error handling
     cap = None
     detector = None
     
     try:
+        # Initialize camera
         cap = cv2.VideoCapture(0)
         
         if not cap.isOpened():
-            print("ERROR: Could not open camera. Check if camera is connected.")
+            print("❌ ERROR: Could not open camera.")
+            print("   - Check if camera is connected")
+            print("   - Check camera permissions")
+            print("   - Try a different camera index")
             return
         
-        # Set camera properties with fallback
+        # Set camera properties
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, wCam)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, hCam)
         
-        # Try to set FPS for stability
         try:
             cap.set(cv2.CAP_PROP_FPS, 30)
         except:
@@ -285,17 +306,15 @@ def main():
         # Initialize detector
         detector = HandDetector(maxHands=1)
         
-        print("=" * 50)
-        print("Virtual Mouse Started")
-        print("=" * 50)
+        print("\n" + "="*60)
+        print("✅ Virtual Mouse Started Successfully!")
+        print("="*60)
         print("Controls:")
-        print("  - Index finger up: Move mouse")
-        print("  - Index + Middle fingers up: Click (bring close together)")
-        print("  - Press 'q' to quit")
-        print("=" * 50)
+        print("  ☝️  Index finger up    → Move mouse")
+        print("  🤌 Index + Middle     → Click mode")
+        print("  🔴 Press 'Q' or 'ESC' → Quit")
+        print("="*60 + "\n")
         
-        frame_count = 0
-        fps = 0
         pTime = time.time()
         plocX, plocY = 0, 0
         clocX, clocY = 0, 0
@@ -305,7 +324,7 @@ def main():
                 success, img = cap.read()
                 
                 if not success or img is None:
-                    print("Warning: Failed to read frame")
+                    print("⚠️  Warning: Failed to read frame")
                     continue
                 
                 # Mirror the frame
@@ -342,10 +361,10 @@ def main():
                             try:
                                 pyautogui.moveTo(int(clocX), int(clocY), duration=0)
                             except pyautogui.FailSafeException:
-                                print("Mouse moved to corner - failsafe triggered")
+                                print("⚠️  Mouse at corner - failsafe triggered")
                                 break
                             except Exception as e:
-                                print(f"Warning: Could not move mouse: {e}")
+                                print(f"⚠️  Could not move mouse: {e}")
                             
                             cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
                             plocX, plocY = clocX, clocY
@@ -360,19 +379,19 @@ def main():
                                          15, (0, 255, 0), cv2.FILLED)
                                 try:
                                     pyautogui.click()
-                                    time.sleep(0.2)  # Debounce clicks
+                                    time.sleep(0.2)  # Debounce
                                 except Exception as e:
-                                    print(f"Warning: Could not perform click: {e}")
+                                    print(f"⚠️  Could not perform click: {e}")
                     
-                    except (IndexError, ValueError) as e:
-                        print(f"Warning: Hand tracking issue: {e}")
+                    except (IndexError, ValueError):
+                        pass
                 
                 # FPS Calculation
                 cTime = time.time()
                 fps = 1 / (cTime - pTime) if (cTime - pTime) > 0 else 0
                 pTime = cTime
                 
-                # Display FPS with error handling
+                # Display info
                 try:
                     cv2.putText(img, f'FPS: {int(fps)}', (20, 50), 
                               cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
@@ -387,27 +406,32 @@ def main():
                 # Check for exit key
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q') or key == 27:  # 'q' or ESC
-                    print("Shutting down...")
+                    print("👋 Shutting down...")
                     break
                 
-                frame_count += 1
-                
             except KeyboardInterrupt:
-                print("Interrupted by user")
+                print("⏹️  Interrupted by user")
                 break
             except Exception as e:
-                print(f"Error in main loop: {e}")
+                print(f"❌ Error in main loop: {e}")
                 continue
     
     except Exception as e:
-        print(f"Fatal error: {e}")
+        print(f"❌ Fatal error: {e}")
+        print(f"\nTroubleshooting:")
+        print(f"1. Make sure all modules are installed:")
+        print(f"   pip install -r requirements.txt")
+        print(f"2. Check MediaPipe version:")
+        print(f"   pip show mediapipe")
+        print(f"3. Try upgrading MediaPipe:")
+        print(f"   pip install --upgrade mediapipe")
     
     finally:
         # Cleanup
         if cap is not None:
             cap.release()
         cv2.destroyAllWindows()
-        print("Virtual Mouse closed")
+        print("👋 Virtual Mouse closed")
 
 
 if __name__ == "__main__":
